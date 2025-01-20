@@ -35,5 +35,53 @@ done
 ```
 ## Phylogenomic analysis with GenFlow 
 [GenFlow](https://github.com/braddmg/GenFlow) is a streamlined bioinformatic pipeline that combines several tools, including NCBI Datasets command-line, EDirect, Anvi’o, Prodigal, MAFFT, and FastTree, to provide users with an easy, one-command solution for performing phylogenomic and ANI analysis. In our case we employed the tool to compare our isolates with other reference strains belonging to phylogroups A, B1, B2, D1, E and F1. The genomes.txt file with the reference accession numbers is available in the repository. 
+Additionally, GenFlow uses anvio to remove contigs shorter than 1000bp and produce a new fasta file.
 
+```bash
+#Genflow uses all fasta files in the directory 
+GenFlow -g genomes.txt -G 0.8 -F 0.8 -t 32 -N
+```
+## MultiLocus sequence type 
+MLST was assesed with [mlst](https://github.com/tseemann/mlst) software.
+
+```bash
+mlst *.fasta
+```
+
+## Serotype and Antimicrobial resistance genes identification with ABRicate
+We employed [ABRicate](https://github.com/tseemann/abricate) to identify the potential serotype of isolates based on lipopolysaccharide (O) and flagellar (H) surface antigen genes and to identify antibiotic resistance genes (ARGs) with the AMRFinder database (NCBI).
+
+```bash
+for i in `ls -1 *.fasta | sed 's/.fasta//'`
+do 
+abricate --db ecoh  $i\.fasta > $i\.ecoh
+abricate --db ncbi  $i\.fasta > $i\.ncbi
+done
+```
+
+## Plasmid identification
+We reconstructed and classified plasmid sequences with [MOB-suite](https://github.com/phac-nml/mob-suite).
+
+```bash
+for i in `ls -1 *.fasta | sed 's/.fasta//'`
+do
+mob_recon --infile $i\.fa --outdir $i\_mob/
+done
+```
+
+## Comparative Analysis of Integron Sequences 
+In this step, integron sequences were identified with [IntegronFinder](https://github.com/gem-pasteur/Integron_Finder). The regions spanning the identified integrons were extracted from the assembled genomes using [SAMtools ](https://www.htslib.org). 
+
+```bash
+#IntegronFinder
+for i in `ls -1 *.fasta | sed 's/.fasta//'`
+do
+integron_finder --local-max --func-annot $i\.fasta
+done
+
+#Example to extract integron sequence in the A1539 genome
+samtools faidx A1539.fa NODE_27_length_63054_cov_14.190061:21334-23845
+```
+
+Those integron sequences were then annnotated with [Anvi’o](https://anvio.org) and subsequently analyed with [MobMess](https://github.com/michaelkyu/MobMess) software. 
 
