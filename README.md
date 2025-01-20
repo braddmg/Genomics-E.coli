@@ -83,5 +83,23 @@ done
 samtools faidx A1539.fa NODE_27_length_63054_cov_14.190061:21334-23845
 ```
 
-Those integron sequences were then annnotated with [Anvi’o](https://anvio.org) and subsequently analyed with [MobMess](https://github.com/michaelkyu/MobMess) software. 
+Those integron sequences were saved as fasta files and then annnotated with [Anvi’o](https://anvio.org) using COG14 and Pfam and subsequently analyzed with [MobMess](https://github.com/michaelkyu/MobMess) software. 
 
+```bash
+anvi-script-reformat-fasta integrons.fasta \
+                           -o integrons.fa \
+                           --seq-type NT --simplify-names --prefix integrons
+anvi-gen-contigs-database -f integrons.fa -o integrons.db
+anvi-run-hmms -c integrons.db
+anvi-export-gene-calls --gene-caller prodigal -c integrons.db -o integrons-gene-calls.txt
+done
+
+anvi-run-ncbi-cogs -T 32 --cog-version COG14 --cog-data-dir /work/databases/anvio/COG_2014 -c integrons.db
+anvi-run-pfams -T 32 --pfam-data-dir /work/bmendoza/Tesis/Data/plasmids/anvio/Pfam_v32 -c integrons.db
+anvi-export-functions --annotation-sources COG14_FUNCTION,Pfam -c integrons.db -o integrons-cogs-and-pfams.txt
+done
+
+#Visualization 
+contigs=integrons_000000000001,integrons_000000000002,integrons_000000000003,integrons_000000000004,integrons_000000000005,integrons_000000000006
+mobmess visualize -s integrons.fa -a integrons-cogs-and-pfams.txt -g integrons-gene-calls.txt -o figura/ -T 32 --contigs $contigs --align-blocks-height 1
+```
