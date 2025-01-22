@@ -1,8 +1,8 @@
 # Pipeline for genomic analyses of Escherichia coli isolated from wastewaters
-This pipeline was employed to analyze the genome of eight multidrug-resistant Eschericha coli isolated from wastewater treatment plants. 
+This pipeline analyzed the genomes of eight multidrug-resistant Escherichia coli strains isolated from wastewater treatment plants.
 
 ## Quality control with trimmomatic
-Raw data may be filtered to keep only high quility reads. For this we employed [trimmomatic](https://github.com/timflutre/trimmomatic) 
+Reads were filtered for quality control with [trimmomatic](https://github.com/timflutre/trimmomatic) 
 
 ```bash
 for i in `ls -1 *_R1_001.fastq.gz | sed 's/_R1_001.fastq.gz//'`
@@ -11,18 +11,18 @@ $i\_R1_001.fastq.gz $i\_R2_001.fastq.gz $i\_paired_R1.fastq.gz $i\_unpaired_R1.f
 done
 ```
 ## Genome assembly 
-For genome assembly we employed SPAdes v3.14.1 with the next command:
+Genome assembly was performed with SPAdes v3.14.1:
 ```bash
 for i in `ls -1 *_R1.fastq.gz | sed 's/_R1.fastq.gz//'`
 do 
 spades.py -k 21,33,55,77,99 -t 12 --careful --pe1-1 $i_R1.fastq.gz --pe1-2  $i_ R2.fastq.gz -o ../../ASSEMBLY/
 done
 ```
-## Evaluation of genome quality
-To generate assembly metrics such as N50, L50, size, GC content and other, we employed QUAST. Additionally we used checkm2 to evaluate the completeness and contamination of assembled genomes. 
+## Genome Quality Evaluation
+Assembly metrics (e.g., N50, GC content) were calculated with QUAST, and genome completeness/contamination was assessed with CheckM2:. 
 
 ```bash
-#Quast only evaluating contigs longer than 1000bp
+#Quast (contigs > 1000bp)
 for i in `ls -1 *.fasta | sed 's/.fasta//'`
 do 
 /opt/bioinf/quast-4.6.0/quast-4.6.0/quast.py -L -s $i\.fasta -o QUAST2/$i\ --min-contig 1000
@@ -34,22 +34,21 @@ checkm2 predict --threads 32 --input $i\.fasta --output-directory checkm2/$i
 done
 ```
 ## Phylogenomic analysis with GenFlow 
-[GenFlow](https://github.com/braddmg/GenFlow) is a streamlined bioinformatic pipeline that combines several tools, including NCBI Datasets command-line, EDirect, Anvi’o, Prodigal, MAFFT, and FastTree, to provide users with an easy, one-command solution for performing phylogenomic and ANI analysis. In our case we employed the tool to compare our isolates with other reference strains belonging to phylogroups A, B1, B2, D1, E and F1. The genomes.txt file with the reference accession numbers is available in the repository. 
-Additionally, GenFlow uses anvio to remove contigs shorter than 1000bp and produce a new fasta file.
+[GenFlow](https://github.com/braddmg/GenFlow) is a streamlined bioinformatic pipeline that combines several tools, including NCBI Datasets command-line, EDirect, Anvi’o, Prodigal, MAFFT, and FastTree, to provide users with an easy, one-command solution for performing phylogenomic and ANI analysis. We used used the tool to compare isolates alongside reference strains from phylogroups A, B1, B2, D1, E, and F1. Reference genome accession numbers are available in genomes.txt file in the repository.
 
 ```bash
 #Genflow uses all fasta files in the directory 
 GenFlow -g genomes.txt -G 0.8 -F 0.8 -t 32 -N
 ```
 ## MultiLocus sequence type 
-MLST was assesed with [mlst](https://github.com/tseemann/mlst) software.
+MLST was performed with [mlst](https://github.com/tseemann/mlst) software.
 
 ```bash
 mlst *.fasta
 ```
 
 ## Serotype and Antimicrobial resistance genes identification with ABRicate
-We employed [ABRicate](https://github.com/tseemann/abricate) to identify the potential serotype of isolates based on lipopolysaccharide (O) and flagellar (H) surface antigen genes and to identify antibiotic resistance genes (ARGs) with the AMRFinder database (NCBI).
+We employed [ABRicate](https://github.com/tseemann/abricate) to predict the serotype of isolates by analyzing genes encoding the lipopolysaccharide (O) and flagellar (H) surface antigen genes. Additionally,  ABRicate was employed with the [AMRFinder](https://github.com/ncbi/amr) database (NCBI) to identify antibiotic resistance genes (ARGs).
 
 ```bash
 for i in `ls -1 *.fasta | sed 's/.fasta//'`
@@ -70,7 +69,7 @@ done
 ```
 
 ## Comparative Analysis of Integron Sequences 
-In this step, integron sequences were identified with [IntegronFinder](https://github.com/gem-pasteur/Integron_Finder). The regions spanning the identified integrons were extracted from the assembled genomes using [SAMtools ](https://www.htslib.org). 
+Integron sequences were identified with [IntegronFinder](https://github.com/gem-pasteur/Integron_Finder). The regions spanning the identified integrons were extracted from the assembled genomes using [SAMtools ](https://www.htslib.org). 
 
 ```bash
 #IntegronFinder
@@ -83,7 +82,7 @@ done
 samtools faidx A1539.fa NODE_27_length_63054_cov_14.190061:21334-23845
 ```
 
-Those integron sequences were saved as fasta files and then annnotated with [Anvi’o](https://anvio.org) using COG14 and Pfam and subsequently analyzed with [MobMess](https://github.com/michaelkyu/MobMess) software. 
+The identified integron sequences were saved as FASTA files, annotated with [Anvi’o](https://anvio.org) using COG14 and Pfam databases, and subsequently analyzed with [MobMess](https://github.com/michaelkyu/MobMess) software. 
 
 ```bash
 anvi-script-reformat-fasta integrons.fasta \
